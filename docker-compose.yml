@@ -1,0 +1,54 @@
+volumes:
+  db_volume:
+
+services:
+  # Сервис для приложения
+  app:
+    container_name: jwtauth
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${HTTP_PORT}:${HTTP_PORT}" 
+      - "${SWAGGER_PORT}:${SWAGGER_PORT}" 
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: always
+    env_file:
+      - .env
+
+  # Сервис для PostgreSQL
+  db:
+    container_name: postgres
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: ${DB_DB}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}    
+    ports:
+      - "${DB_PORT}:${DB_PORT_INTERNAL}" 
+    volumes:
+      - db_volume:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "sh -c 'pg_isready -U postgres -d ${DB_DB}'"]
+      interval: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 10s
+
+  # Сервис для миграций
+  migrate:
+    container_name: migrator
+    build:
+      context: .
+      dockerfile: migration.Dockerfile
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+    env_file:
+      - .env
+
