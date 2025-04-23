@@ -28,10 +28,12 @@ Payload токенов должен содержать сведения об ip 
 ## Запуск
 1. Запустить Docker Desktop
 2. Прописать в CLI:   
-> docker compose up -d -build
+      
+        docker compose up -d -build
 
 Можно просто использовать команды `Makefile`:
-> make docker-build
+        
+    make docker-build
 
 Приложение запустится на `localhost:8080`
 
